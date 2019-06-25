@@ -1,0 +1,117 @@
+{
+  "inbounds": [
+    {
+      "port": 1080,
+      "listen": "127.0.0.1",
+      "protocol": "socks",
+      "settings": {
+        "udp": true
+      }
+    },
+    {
+      "port": 1087,
+      "listen": "127.0.0.1",
+      "protocol": "http",
+      "settings": {
+        "timeout": 0
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "sendThrough": "0.0.0.0",
+      "mux": {
+        "enabled": false,
+        "concurrency": 8
+      },
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "198.181.41.215",
+            "users": [
+              {
+                "id": "4eb0ea4f-9e98-337e-7ff3-6fcc7024d16e",
+                "alterId": 100,
+                "security": "auto",
+                "level": 1
+              }
+            ],
+            "port": 10443
+          }
+        ]
+      },
+      "tag": "US-V2Ray",
+      "streamSettings": {
+        "wsSettings": {
+          "path": "",
+          "headers": {}
+        },
+        "quicSettings": {
+          "key": "",
+          "header": {
+            "type": "none"
+          },
+          "security": "none"
+        },
+        "tlsSettings": {
+          "allowInsecure": false,
+          "alpn": [
+            "http\/1.1"
+          ],
+          "serverName": "198.181.41.215",
+          "allowInsecureCiphers": false
+        },
+        "httpSettings": {
+          "path": ""
+        },
+        "kcpSettings": {
+          "header": {
+            "type": "none"
+          },
+          "mtu": 1350,
+          "congestion": false,
+          "tti": 20,
+          "uplinkCapacity": 5,
+          "writeBufferSize": 1,
+          "readBufferSize": 1,
+          "downlinkCapacity": 20
+        },
+        "tcpSettings": {
+          "header": {
+            "type": "none"
+          }
+        },
+        "security": "none",
+        "network": "kcp"
+      }
+    },
+    {
+      "protocol": "freedom",
+      "settings": {},
+      "tag": "direct"
+    }
+  ],
+  "routing": {
+    "domainStrategy": "IPOnDemand",
+    "rules": [
+      {
+        "type": "field",
+        "outboundTag": "direct",
+        "domain": [
+          "geosite:cn",
+          "music.126.net",
+          "126.net"
+        ]
+      },
+      {
+        "type": "field",
+        "outboundTag": "direct",
+        "ip": [
+          "geoip:cn",
+          "geoip:private"
+        ]
+      }
+    ]
+  }
+}
