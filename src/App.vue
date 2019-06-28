@@ -3,12 +3,12 @@
     <div id="container">
       <div id="nav">
         <img id="logo" alt="Traffic logo" src="./assets/logo.png">
-        <div id="logo-text">Traffic</div>
+        <div id="logo-text">ray4me</div>
         <MainMenu/>
       </div>
       <div id="content">
         <header id="top-frame">
-          <h3>Traffic</h3>
+          <h3>ray4me</h3>
         </header>
         <router-view class="content"/>
       </div>
