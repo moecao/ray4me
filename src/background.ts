@@ -2,16 +2,20 @@
 
 import { app, protocol, BrowserWindow, Tray, ipcMain, Menu, Event, MenuItem } from 'electron'
 import { exec, execFile, ChildProcess } from 'child_process'
+import fs from 'fs'
 import path from 'path'
 import {
   createProtocol,
   installVueDevtools,
 } from 'vue-cli-plugin-electron-builder/lib'
+import { fstat } from 'fs';
+
+let v2rayConfigPath: string
+
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
-// tslint:disable-next-line: variable-name
-const __static = 'public'
+declare let __static: string
 
 enum ServiceState {
   ON,
@@ -26,8 +30,8 @@ enum ProxyMode {
 let appIcon: Tray
 let v2rayProcess: ChildProcess
 
-let currentServiceState: ServiceState
-let currentProxyMode: ProxyMode
+let currentServiceState: ServiceState = ServiceState.OFF
+let currentProxyMode: ProxyMode = ProxyMode.DIRECT
 
 let rayOn: MenuItem
 let rayOff: MenuItem
@@ -54,9 +58,12 @@ const createWindow = () => {
     resizable: false,
     frame: true,
     title: 'traffic',
-    titleBarStyle: 'hidden',
+    titleBarStyle: 'hiddenInset',
+    transparent: true,
     icon: path.join(__static, 'assets/icon.png'),
   })
+
+
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
@@ -70,6 +77,11 @@ const createWindow = () => {
 
   win.webContents.on('did-finish-load', (event: Event) => {
     // TODO load config file
+    console.log(v2rayConfigPath)
+    event.sender.send('v2ray-config-path', v2rayConfigPath)
+    if (currentServiceState === ServiceState.ON) {
+      event.sender.send('v2ray-state-response', 'done')
+    }
   })
 
   win.on('closed', () => {
@@ -79,14 +91,37 @@ const createWindow = () => {
 
   app.dock.show()
 }
-
-
-const init = () => {
-  putTray()
-  startV2ray()
-  switchPacMode()
+let v2rayDefaultConfigPath = path.join(__static, 'assets/v2ray/config.json');
+if (!isDevelopment) {
+  v2rayDefaultConfigPath = path.join(__dirname, './../public/assets/v2ray/config.json')
 }
 
+const init = () => {
+  v2rayConfigPath = path.join(app.getPath('userData'), 'v2ray-config.json')
+  console.log(v2rayDefaultConfigPath)
+  // createWindow()
+  putTray()
+  loadDefaultV2RayConfig()
+}
+
+
+const loadDefaultV2RayConfig = () => {
+  const exist = fs.existsSync(v2rayConfigPath)
+  if (!exist) {
+    fs.readFile(v2rayDefaultConfigPath,
+      { encoding: 'UTF-8' },
+      (err, data: string) => {
+        if (err) {
+          throw err
+        }
+        fs.writeFile(v2rayConfigPath, data, (err) => {
+          if (err) {
+            throw err
+          }
+        })
+      })
+  }
+}
 
 const putTray = () => {
   const iconName = process.platform === 'win32' ? 'windows-icon.png' : 'tray-icon.png';
@@ -98,14 +133,16 @@ const putTray = () => {
     label: 'Turn V2Ray ON',
     type: 'checkbox',
     click: () => {
-      startV2ray()
+      startV2ray(function (err: Error | null) {
+
+      })
     },
   }, {
     id: 'rayOff',
     label: 'Turn V2Ray OFF',
     type: 'checkbox',
     click: () => {
-      stopV2ray()
+      stopV2ray(() => { })
     },
   }, {
     type: 'separator',
@@ -129,7 +166,12 @@ const putTray = () => {
     type: 'normal',
     label: 'Preferences',
     click: () => {
-      createWindow()
+      if (win != null) {
+        win.show();
+      } else {
+        createWindow()
+      }
+
     },
   }, {
     type: 'separator',
@@ -147,24 +189,41 @@ const putTray = () => {
   appIcon.setContextMenu(contextMenu);
 }
 
-const startV2ray = () => {
+const startV2ray = (callback: Function) => {
   // mainWindow.webContents.send('ray-state-response', 'ON')
   rayOn.checked = true;
   rayOn.enabled = false;
 
   rayOff.checked = false;
   rayOff.enabled = true;
-  v2rayProcess = execFile(path.join(__static, './assets/v2ray/v2ray'), (err, stdout, stderr) => {
-    if (!err) {
+  let v2rayPath = path.join(__static, './assets/v2ray/v2ray')
+  if (!isDevelopment) {
+    v2rayPath = path.join(__dirname, './../public/assets/v2ray/v2ray')
+  }
+  v2rayProcess = execFile(
+    v2rayPath,
+    ['--config=', v2rayConfigPath],
+    (err, stdout, stderr) => {
+      console.log('程序退出了')
+      console.log(err)
+    })
+  v2rayProcess.stdout.once('data', (data) => {
+    console.log('数据:', data)
+    if (data.indexOf('address') <= 0) {
+      callback(null)
       currentServiceState = ServiceState.ON
+    } else {
+      callback('error')
+      currentServiceState = ServiceState.OFF
     }
-    console.log(err)
-    console.log(stdout)
-    console.log(stderr)
+  })
+  v2rayProcess.stderr.on('data', (data) => {
+    console.log('cuowu数据:', data)
+    callback(data)
   })
 }
 
-const stopV2ray = () => {
+const stopV2ray = (callback: Function) => {
   // mainWindow.webContents.send('ray-state-response', 'OFF')
   rayOff.checked = true
   rayOff.enabled = false
@@ -178,13 +237,49 @@ const stopV2ray = () => {
       return
     }
     currentServiceState = ServiceState.OFF
-
-
+    callback()
   }
 }
 
+const restartV2Ray = () => {
+  stopV2ray(() => { })
+  startV2ray((err: Error | null) => {
+
+  })
+}
+
+ipcMain.on('v2ray-state', (event: Event, arg: any) => {
+  switch (arg) {
+    case 'start':
+      console.log('V2Ray starting...')
+      startV2ray((err: Error | null) => {
+        console.log('进来了')
+        console.log(err)
+        event.sender.send('v2ray-state-response', err ? err : 'done')
+      })
+      switchPacMode()
+      break;
+    case 'restart':
+      console.log('V2Ray restarting...')
+      restartV2Ray()
+      switchPacMode()
+      break;
+    case 'stop':
+      console.log('V2Ray stoping...')
+      stopV2ray(() => event.sender.send('v2ray-state-response', 'stop'))
+      switchDirectMode()
+      break;
+    default:
+      break;
+  }
+})
+
 const switchPacMode = () => {
-  exec(path.join(__static, './assets/shell/setproxy.sh g'), (err, stdout, stderr) => {
+  let setproxyPath = path.join(__static, './assets/shell/setproxy.sh g')
+  if (!isDevelopment) {
+    setproxyPath = path.join(__dirname, './../public/assets/shell/setproxy.sh g')
+  }
+  exec( setproxyPath, (err, stdout, stderr) => {
     if (!err) {
       currentProxyMode = ProxyMode.PAC
       pacMode.checked = true
@@ -193,14 +288,18 @@ const switchPacMode = () => {
       directMode.checked = false
       directMode.enabled = true
     }
-    console.log(err)
+    // console.log(err)
     console.log(stdout)
     console.log(stderr)
   });
 }
 
 const switchDirectMode = () => {
-  exec(path.join(__static, './assets/shell/setproxy.sh n'), (err, stdout, stderr) => {
+  let setproxyPath = path.join(__static, './assets/shell/setproxy.sh n')
+  if (!isDevelopment) {
+    setproxyPath = path.join(__dirname, './../public/assets/shell/setproxy.sh n')
+  }
+  exec(setproxyPath, (err, stdout, stderr) => {
     if (!err) {
       currentProxyMode = ProxyMode.DIRECT
       pacMode.checked = false
@@ -214,7 +313,7 @@ const switchDirectMode = () => {
   });
 }
 
-app.dock.hide()
+// app.dock.hide()
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
@@ -225,12 +324,14 @@ app.on('window-all-closed', () => {
   }
 })
 
-app.on('activate', () => {
+app.on('activate', (event: Event) => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
+
   if (win === null) {
     init()
   }
+
 })
 
 // This method will be called when Electron has finished

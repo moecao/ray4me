@@ -2,6 +2,7 @@
   "name": "ray4me",
   "version": "0.1.0",
   "private": true,
+  "description": "This application is package v2ray and shadowsocks with fantastic GUI cross platform",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
@@ -17,6 +18,8 @@
     "@fortawesome/free-solid-svg-icons": "^5.9.0",
     "@fortawesome/vue-fontawesome": "^0.1.6",
     "core-js": "^2.6.5",
+    "iview": "^3.0.1",
+    "node-gyp": "^5.0.1",
     "vue": "^2.6.10",
     "vue-class-component": "^7.0.2",
     "vue-property-decorator": "^8.1.0",
@@ -26,11 +29,15 @@
     "@vue/cli-plugin-babel": "^3.8.0",
     "@vue/cli-plugin-typescript": "^3.8.0",
     "@vue/cli-service": "^3.8.0",
+    "babel-plugin-import": "^1.8.0",
     "electron": "^5.0.4",
     "sass": "^1.18.0",
     "sass-loader": "^7.1.0",
     "typescript": "^3.4.3",
     "vue-cli-plugin-electron-builder": "^1.3.5",
+    "vue-cli-plugin-iview": "^1.0.6",
     "vue-template-compiler": "^2.6.10"
-  }
+  },
+  "author": "crazytravel",
+  "license": "MIT "
 }

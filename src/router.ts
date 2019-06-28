@@ -27,7 +27,7 @@ export default new Router({
       path: '/shadowsocks',
       name: 'shadowsocks',
       component: () => import('./views/Shadowsocks.vue'),
-    },{
+    }, {
       path: '/preference',
       name: 'preference',
       component: () => import('./views/Preference.vue'),

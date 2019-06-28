@@ -17,15 +17,27 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
-import MainMenu from "@/components/MainMenu.vue"; // @ is an alias to /src
+import Vue from 'vue';
+import { ipcRenderer } from 'electron';
+import Global from '@/Global.vue';
+import MainMenu from '@/components/MainMenu.vue'; // @ is an alias to /src
+import GlobalVue from '@/Global.vue';
 
-@Component({
+export default Vue.extend({
   components: {
-    MainMenu
-  }
-})
-export default class App extends Vue {}
+    MainMenu,
+  },
+  mounted() {
+    ipcRenderer.on('v2ray-state', (event: Event, args: any) => {
+      console.log(args)
+      Global.v2rayState = args
+    });
+    ipcRenderer.on('v2ray-config-path', (event: Event, args: any) => {
+      console.log(args);
+      Global.v2rayConfigPath = args;
+    });
+  },
+});
 </script>
 
 
@@ -38,7 +50,9 @@ body {
   height: 100%;
 }
 #app {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
@@ -59,8 +73,8 @@ body {
       /* 无Frame的窗口，可拖动的位置 */
       -webkit-user-select: none;
       /* 文字不可选 */
-      width: 180px;
-      background-color: #3F51B5;
+      width: 250px;
+      background-color: #3f51b5;
       padding: 30px;
       text-align: center;
       #logo {
@@ -75,25 +89,29 @@ body {
       }
     }
     #content {
+      display: flex;
+      flex-direction: column;
       flex: 1;
       position: relative;
       #top-frame {
+        width: 100%;
         height: 40px;
         line-height: 40px;
         -webkit-app-region: drag;
         /* 无Frame的窗口，可拖动的位置 */
         -webkit-user-select: none;
         /* 文字不可选 */
-        position: fixed;
-        top: 0;
-        left: 240px;
-        right: 0;
+        // position: fixed;
+        // top: 0;
+        // left: 250px;
+        // right: 0;
         // background-color: rgba($color: #c0c0c0, $alpha: 0.5);
-        background-color: #FFF;
-        border: 1px solid rgba($color: #c0c0c0, $alpha: .3);
+        background-color: #fff;
+        border: 1px solid rgba($color: #c0c0c0, $alpha: 0.3);
       }
       .content {
-        margin-top: 40px;
+        flex: 1;
+        // margin-top: 40px;
       }
     }
   }

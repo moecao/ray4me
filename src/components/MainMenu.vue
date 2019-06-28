@@ -12,16 +12,16 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
-import { library } from "@fortawesome/fontawesome-svg-core";
+import Vue from 'vue';
+import { library } from '@fortawesome/fontawesome-svg-core';
 import {
   faTachometerAlt,
   faLeaf,
   faPaperPlane,
   faTools,
-  faInfoCircle
-} from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+  faInfoCircle,
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
 library.add(faTachometerAlt);
 library.add(faLeaf);
@@ -29,23 +29,24 @@ library.add(faPaperPlane);
 library.add(faTools);
 library.add(faInfoCircle);
 
-Vue.component("font-awesome-icon", FontAwesomeIcon);
+Vue.component('font-awesome-icon', FontAwesomeIcon);
 
-@Component
-export default class MainMenu extends Vue {
-  private menus: object[] = [
-    {
-      id: 1,
-      text: "Dashboard",
-      icon: "tachometer-alt",
-      route: "/"
-    },
-    { id: 2, text: "V2Ray", icon: "leaf", route: "/v2ray" },
-    { id: 3, text: "Shadowsocks", icon: "paper-plane", route: "/shadowsocks" },
-    { id: 4, text: "Preference", icon: "tools", route: "/preference" },
-    { id: 5, text: "About", icon: "info-circle", route: "/about" }
-  ];
-}
+export default Vue.extend({
+  data: () => ({
+    menus: [
+      { id: 1, text: 'Dashboard', icon: 'tachometer-alt', route: '/' },
+      { id: 2, text: 'V2Ray', icon: 'leaf', route: '/v2ray' },
+      {
+        id: 3,
+        text: 'Shadowsocks',
+        icon: 'paper-plane',
+        route: '/shadowsocks',
+      },
+      { id: 4, text: 'Preference', icon: 'tools', route: '/preference' },
+      { id: 5, text: 'About', icon: 'info-circle', route: '/about' },
+    ],
+  }),
+});
 </script>
 
 <style lang="scss" scoped>
