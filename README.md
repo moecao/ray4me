@@ -1,29 +1,19 @@
 # ray4me
 
+ray4me is a cross platform native GUI application for v2ray and shadowsocks
+
+
 ## Project setup
 ```
 yarn install
 ```
 
-### Compiles and hot-reloads for development
+## Development
 ```
-yarn run serve
-```
-
-### Compiles and minifies for production
-```
-yarn run build
+yarn electron:serve
 ```
 
-### Run your tests
+## Build
 ```
-yarn run test
+yarn electron:build
 ```
-
-### Lints and fixes files
-```
-yarn run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
